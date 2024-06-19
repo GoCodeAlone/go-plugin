@@ -9,9 +9,9 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/GoCodeAlone/go-plugin"
+	"github.com/GoCodeAlone/go-plugin/examples/basic/shared"
 	hclog "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-plugin/examples/basic/shared"
 )
 
 func main() {

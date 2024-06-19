@@ -11,7 +11,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/hashicorp/go-plugin/internal/plugin"
+	"github.com/GoCodeAlone/go-plugin/internal/plugin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"

@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-plugin/examples/bidirectional/shared"
+	"github.com/GoCodeAlone/go-plugin"
+	"github.com/GoCodeAlone/go-plugin/examples/bidirectional/shared"
 )
 
 // Here is a real implementation of KV that writes to a local file with

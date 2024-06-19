@@ -11,8 +11,8 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-plugin/examples/bidirectional/shared"
+	"github.com/GoCodeAlone/go-plugin"
+	"github.com/GoCodeAlone/go-plugin/examples/bidirectional/shared"
 )
 
 type addHelper struct{}

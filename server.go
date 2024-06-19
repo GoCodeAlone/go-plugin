@@ -20,8 +20,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GoCodeAlone/go-plugin/internal/grpcmux"
 	hclog "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin/internal/grpcmux"
 	"google.golang.org/grpc"
 )
 

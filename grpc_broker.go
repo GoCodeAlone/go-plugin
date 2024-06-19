@@ -14,9 +14,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/hashicorp/go-plugin/internal/grpcmux"
-	"github.com/hashicorp/go-plugin/internal/plugin"
-	"github.com/hashicorp/go-plugin/runner"
+	"github.com/GoCodeAlone/go-plugin/internal/grpcmux"
+	"github.com/GoCodeAlone/go-plugin/internal/plugin"
+	"github.com/GoCodeAlone/go-plugin/runner"
 
 	"github.com/oklog/run"
 	"google.golang.org/grpc"

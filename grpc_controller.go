@@ -6,7 +6,7 @@ package plugin
 import (
 	"context"
 
-	"github.com/hashicorp/go-plugin/internal/plugin"
+	"github.com/GoCodeAlone/go-plugin/internal/plugin"
 )
 
 // GRPCControllerServer handles shutdown calls to terminate the server when the

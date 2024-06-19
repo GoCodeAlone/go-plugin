@@ -2,9 +2,9 @@ module example.com/testdata
 
 go 1.19
 
-replace github.com/hashicorp/go-plugin => ../../../
+replace github.com/GoCodeAlone/go-plugin => ../../../
 
-require github.com/hashicorp/go-plugin v1.4.7
+require github.com/GoCodeAlone/go-plugin v1.4.7
 
 require google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
 

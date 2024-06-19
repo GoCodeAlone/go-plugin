@@ -6,9 +6,9 @@ package shared
 import (
 	"context"
 
+	plugin "github.com/GoCodeAlone/go-plugin"
+	"github.com/GoCodeAlone/go-plugin/examples/bidirectional/proto"
 	hclog "github.com/hashicorp/go-hclog"
-	plugin "github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-plugin/examples/bidirectional/proto"
 	"google.golang.org/grpc"
 )
 

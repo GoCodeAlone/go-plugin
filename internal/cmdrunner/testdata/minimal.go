@@ -3,7 +3,7 @@
 
 package main
 
-import "github.com/hashicorp/go-plugin"
+import "github.com/GoCodeAlone/go-plugin"
 
 func main() {
 	plugin.Serve(nil)

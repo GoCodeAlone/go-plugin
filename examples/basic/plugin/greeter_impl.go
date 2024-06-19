@@ -6,9 +6,9 @@ package main
 import (
 	"os"
 
+	"github.com/GoCodeAlone/go-plugin"
+	"github.com/GoCodeAlone/go-plugin/examples/basic/shared"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-plugin/examples/basic/shared"
 )
 
 // Here is a real implementation of Greeter

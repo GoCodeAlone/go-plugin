@@ -516,7 +516,7 @@ You will have three repositories:
 * The SDK providing the interface and the GRPC Server and Client implementation
 * The protoc definition file and generated skeleton ( for Go based plugins ).
 
-Other languages will have to generate their own protoc code, and includ it into the plugin; like the Python implementation example located here: [Go-plugin Python Example](https://github.com/hashicorp/go-plugin/tree/master/examples/grpc/plugin-python). Also, read this documentation carefully: [non-go go-plugin](https://github.com/hashicorp/go-plugin/blob/master/docs/guide-plugin-write-non-go.md). This document will also clarify what `1|1|tcp|127.0.0.1:1234|grpc` means and will dissipate the confusion around how plugins work.
+Other languages will have to generate their own protoc code, and includ it into the plugin; like the Python implementation example located here: [Go-plugin Python Example](https://github.com/GoCodeAlone/go-plugin/tree/master/examples/grpc/plugin-python). Also, read this documentation carefully: [non-go go-plugin](https://github.com/GoCodeAlone/go-plugin/blob/master/docs/guide-plugin-write-non-go.md). This document will also clarify what `1|1|tcp|127.0.0.1:1234|grpc` means and will dissipate the confusion around how plugins work.
 
 Lastly, if you would like to have an in-depth explanation about how go-plugin came to be, watch this video by Mitchell:
 

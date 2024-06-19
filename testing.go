@@ -10,8 +10,8 @@ import (
 	"net"
 	"net/rpc"
 
+	"github.com/GoCodeAlone/go-plugin/internal/grpcmux"
 	hclog "github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin/internal/grpcmux"
 	"github.com/mitchellh/go-testing-interface"
 	"google.golang.org/grpc"
 )
