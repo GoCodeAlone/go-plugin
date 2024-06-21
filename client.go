@@ -206,15 +206,12 @@ type ClientConfig struct {
 	SyncStdout io.Writer
 	SyncStderr io.Writer
 
-	// AllowedProtocols is a list of allowed protocols. If this isn't set,
-	// then only netrpc is allowed. This is so that older go-plugin systems
-	// can show friendly errors if they see a plugin with an unknown
-	// protocol.
+	// AllowedProtocols is a list of allowed protocols.
 	//
 	// By setting this, you can cause an error immediately on plugin start
 	// if an unsupported protocol is used with a good error message.
 	//
-	// If this isn't set at all (nil value), then only net/rpc is accepted.
+	// If this isn't set at all (nil value), then only grpc is accepted.
 	// This is done for legacy reasons. You must explicitly opt-in to
 	// new protocols.
 	AllowedProtocols []Protocol
@@ -412,7 +409,7 @@ func NewClient(config *ClientConfig) (c *Client) {
 	}
 
 	if config.AllowedProtocols == nil {
-		config.AllowedProtocols = []Protocol{ProtocolNetRPC}
+		config.AllowedProtocols = []Protocol{ProtocolGRPC}
 	}
 
 	if config.Logger == nil {
@@ -457,9 +454,6 @@ func (c *Client) Client() (ClientProtocol, error) {
 	}
 
 	switch c.protocol {
-	case ProtocolNetRPC:
-		c.client, err = newRPCClient(c)
-
 	case ProtocolGRPC:
 		c.client, err = newGRPCClient(c.doneCtx, c)
 
@@ -893,9 +887,8 @@ func (c *Client) Start() (addr net.Addr, err error) {
 			err = fmt.Errorf("Unknown address type: %s", address)
 		}
 
-		// If we have a server type, then record that. We default to net/rpc
-		// for backwards compatibility.
-		c.protocol = ProtocolNetRPC
+		// If we have a server type, then record that.
+		c.protocol = ProtocolGRPC
 		if len(parts) >= 5 {
 			c.protocol = Protocol(parts[4])
 		}
@@ -1002,7 +995,7 @@ func (c *Client) reattach() (net.Addr, error) {
 	c.protocol = c.config.Reattach.Protocol
 	if c.protocol == "" {
 		// Default the protocol to net/rpc for backwards compatibility
-		c.protocol = ProtocolNetRPC
+		c.protocol = ProtocolGRPC
 	}
 
 	if c.config.Reattach.Test {
@@ -1132,12 +1125,6 @@ func (c *Client) dialer(_ string, timeout time.Duration) (net.Conn, error) {
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	// If we have a TLS config we wrap our connection. We only do this
-	// for net/rpc since gRPC uses its own mechanism for TLS.
-	if c.protocol == ProtocolNetRPC && c.config.TLSConfig != nil {
-		conn = tls.Client(conn, c.config.TLSConfig)
 	}
 
 	return conn, nil

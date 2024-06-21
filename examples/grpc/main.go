@@ -21,7 +21,7 @@ func run() error {
 		Plugins:         shared.PluginMap,
 		Cmd:             exec.Command("sh", "-c", os.Getenv("KV_PLUGIN")),
 		AllowedProtocols: []plugin.Protocol{
-			plugin.ProtocolNetRPC, plugin.ProtocolGRPC},
+			plugin.ProtocolGRPC},
 	})
 	defer client.Kill()
 

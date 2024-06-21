@@ -31,7 +31,7 @@ func main() {
 		Plugins:         shared.PluginMap,
 		Cmd:             exec.Command("sh", "-c", os.Getenv("COUNTER_PLUGIN")),
 		AllowedProtocols: []plugin.Protocol{
-			plugin.ProtocolNetRPC, plugin.ProtocolGRPC},
+			plugin.ProtocolGRPC},
 	})
 	defer client.Kill()
 

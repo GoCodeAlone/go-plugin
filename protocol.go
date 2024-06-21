@@ -13,7 +13,6 @@ type Protocol string
 
 const (
 	ProtocolInvalid Protocol = ""
-	ProtocolNetRPC  Protocol = "netrpc"
 	ProtocolGRPC    Protocol = "grpc"
 )
 

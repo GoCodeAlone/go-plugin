@@ -34,7 +34,7 @@ func generateCert() (cert []byte, privateKey []byte, err error) {
 	template := &x509.Certificate{
 		Subject: pkix.Name{
 			CommonName:   host,
-			Organization: []string{"HashiCorp"},
+			Organization: []string{"GoCodeAlone"},
 		},
 		DNSNames: []string{host},
 		ExtKeyUsage: []x509.ExtKeyUsage{

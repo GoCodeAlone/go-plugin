@@ -148,7 +148,7 @@ func unixSocketConfigFromEnv() UnixSocketConfig {
 func protocolVersion(opts *ServeConfig) (int, Protocol, PluginSet) {
 	protoVersion := int(opts.ProtocolVersion)
 	pluginSet := opts.Plugins
-	protoType := ProtocolNetRPC
+	protoType := ProtocolGRPC
 	// Check if the client sent a list of acceptable versions
 	var clientVersions []int
 	if vs := os.Getenv("PLUGIN_PROTOCOL_VERSIONS"); vs != "" {
@@ -196,10 +196,10 @@ func protocolVersion(opts *ServeConfig) (int, Protocol, PluginSet) {
 			// for the protocol type
 			for _, p := range pluginSet {
 				switch p.(type) {
-				case GRPCPlugin:
+				case Plugin:
 					protoType = ProtocolGRPC
 				default:
-					protoType = ProtocolNetRPC
+					protoType = ProtocolGRPC
 				}
 				break
 			}
@@ -372,21 +372,6 @@ func Serve(opts *ServeConfig) {
 	// Build the server type
 	var server ServerProtocol
 	switch protoType {
-	case ProtocolNetRPC:
-		// If we have a TLS configuration then we wrap the listener
-		// ourselves and do it at that level.
-		if tlsConfig != nil {
-			listener = tls.NewListener(listener, tlsConfig)
-		}
-
-		// Create the RPC server to dispense
-		server = &RPCServer{
-			Plugins: pluginSet,
-			Stdout:  stdout_r,
-			Stderr:  stderr_r,
-			DoneCh:  doneCh,
-		}
-
 	case ProtocolGRPC:
 		var muxer *grpcmux.GRPCServerMuxer
 		if multiplex, _ := strconv.ParseBool(os.Getenv(envMultiplexGRPC)); multiplex {

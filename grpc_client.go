@@ -115,7 +115,7 @@ func (c *GRPCClient) Dispense(name string) (interface{}, error) {
 		return nil, fmt.Errorf("unknown plugin type: %s", name)
 	}
 
-	p, ok := raw.(GRPCPlugin)
+	p, ok := raw.(Plugin)
 	if !ok {
 		return nil, fmt.Errorf("plugin %q doesn't support gRPC", name)
 	}

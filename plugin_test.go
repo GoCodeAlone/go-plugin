@@ -9,23 +9,19 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
 	"io/ioutil"
 	"log"
-	"net/rpc"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
 
 	grpctest "github.com/GoCodeAlone/go-plugin/test/grpc"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 )
-
-// Test that NetRPCUnsupportedPlugin implements the correct interfaces.
-var _ Plugin = new(NetRPCUnsupportedPlugin)
 
 var testHandshake = HandshakeConfig{
 	ProtocolVersion:  1,
@@ -51,52 +47,12 @@ type testStreamer interface {
 	Stream(int32, int32) ([]int32, error)
 }
 
-// testInterfacePlugin implements the Plugin interface
-var _ Plugin = (*testInterfacePlugin)(nil)
-
-// testInterfacePlugin is the implementation of Plugin to create
-// RPC client/server implementations for testInterface.
-type testInterfacePlugin struct {
-	Impl testInterface
-}
-
-func (p *testInterfacePlugin) Server(b *MuxBroker) (interface{}, error) {
-	return &testInterfaceServer{Impl: p.impl()}, nil
-}
-
-func (p *testInterfacePlugin) Client(b *MuxBroker, c *rpc.Client) (interface{}, error) {
-	return &testInterfaceClient{Client: c}, nil
-}
-
-func (p *testInterfacePlugin) impl() testInterface {
-	if p.Impl != nil {
-		return p.Impl
-	}
-
-	return &testInterfaceImpl{
-		logger: hclog.New(&hclog.LoggerOptions{
-			Level:      hclog.Trace,
-			Output:     os.Stderr,
-			JSONFormat: true,
-		}),
-	}
-}
-
-// testGRPCInterfacePlugin implements both Plugin and GRPCPlugin interfaces
+// testGRPCInterfacePlugin implements Plugin interface
 var _ Plugin = (*testGRPCInterfacePlugin)(nil)
-var _ GRPCPlugin = (*testGRPCInterfacePlugin)(nil)
 
-// testGRPCInterfacePlugin is a test implementation of the GRPCPlugin interface
+// testGRPCInterfacePlugin is a test implementation of the Plugin interface
 type testGRPCInterfacePlugin struct {
 	Impl testInterface
-}
-
-func (p *testGRPCInterfacePlugin) Server(b *MuxBroker) (interface{}, error) {
-	return &testInterfaceServer{Impl: p.impl()}, nil
-}
-
-func (p *testGRPCInterfacePlugin) Client(b *MuxBroker, c *rpc.Client) (interface{}, error) {
-	return &testInterfaceClient{Client: c}, nil
 }
 
 func (p *testGRPCInterfacePlugin) GRPCServer(b *GRPCBroker, s *grpc.Server) error {
@@ -149,64 +105,6 @@ func (i *testInterfaceImpl) PrintStdio(stdout, stderr []byte) {
 		fmt.Fprint(os.Stderr, string(stderr))
 		os.Stderr.Sync()
 	}
-}
-
-// testInterfaceClient implements testInterface to communicate over RPC
-type testInterfaceClient struct {
-	Client *rpc.Client
-}
-
-func (impl *testInterfaceClient) Double(v int) int {
-	var resp int
-	err := impl.Client.Call("Plugin.Double", v, &resp)
-	if err != nil {
-		panic(err)
-	}
-
-	return resp
-}
-
-func (impl *testInterfaceClient) PrintKV(key string, value interface{}) {
-	err := impl.Client.Call("Plugin.PrintKV", map[string]interface{}{
-		"key":   key,
-		"value": value,
-	}, &struct{}{})
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (impl *testInterfaceClient) Bidirectional() error {
-	return nil
-}
-
-func (impl *testInterfaceClient) PrintStdio(stdout, stderr []byte) {
-	// We don't implement this because we test stream syncing another
-	// way (see rpc_client_test.go). We probably should test this way
-	// but very few people use the net/rpc protocol nowadays so we didn'
-	// put in the effort.
-	return
-}
-
-// testInterfaceServer is the RPC server for testInterfaceClient
-type testInterfaceServer struct {
-	Broker *MuxBroker
-	Impl   testInterface
-}
-
-func (s *testInterfaceServer) Double(arg int, resp *int) error {
-	*resp = s.Impl.Double(arg)
-	return nil
-}
-
-func (s *testInterfaceServer) PrintKV(args map[string]interface{}, _ *struct{}) error {
-	s.Impl.PrintKV(args["key"].(string), args["value"])
-	return nil
-}
-
-// testPluginMap can be used for tests as a plugin map
-var testPluginMap = map[string]Plugin{
-	"test": new(testInterfacePlugin),
 }
 
 // testGRPCPluginMap can be used for tests as that need a GRPC plugin
@@ -277,9 +175,9 @@ func (s *testGRPCServer) Bidirectional(ctx context.Context, req *grpctest.Bidire
 func (s *testGRPCServer) PrintStdio(
 	ctx context.Context,
 	req *grpctest.PrintStdioRequest,
-) (*empty.Empty, error) {
+) (*emptypb.Empty, error) {
 	s.Impl.PrintStdio(req.Stdout, req.Stderr)
-	return &empty.Empty{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 type pingPongServer struct{}
@@ -468,10 +366,6 @@ func TestHelperProcess(*testing.T) {
 		logger: pluginLogger,
 	}
 
-	testPluginMap := map[string]Plugin{
-		"test": &testInterfacePlugin{Impl: testPlugin},
-	}
-
 	testGRPCPluginMap := map[string]Plugin{
 		"test": &testGRPCInterfacePlugin{Impl: testPlugin},
 	}
@@ -525,24 +419,6 @@ func TestHelperProcess(*testing.T) {
 		}
 
 		os.Exit(1)
-	case "cleanup":
-		// Create a defer to write the file. This tests that we get cleaned
-		// up properly versus just calling os.Exit
-		path := args[0]
-		defer func() {
-			err := ioutil.WriteFile(path, []byte("foo"), 0644)
-			if err != nil {
-				panic(err)
-			}
-		}()
-
-		Serve(&ServeConfig{
-			HandshakeConfig: testHandshake,
-			Plugins:         testPluginMap,
-		})
-
-		// Exit
-		return
 	case "test-grpc":
 		Serve(&ServeConfig{
 			HandshakeConfig: testHandshake,
@@ -563,80 +439,12 @@ func TestHelperProcess(*testing.T) {
 
 		// Shouldn't reach here but make sure we exit anyways
 		os.Exit(0)
-	case "test-interface":
-		Serve(&ServeConfig{
-			HandshakeConfig: testHandshake,
-			Plugins:         testPluginMap,
-		})
-
-		// Shouldn't reach here but make sure we exit anyways
-		os.Exit(0)
-	case "test-interface-logger-netrpc":
-		Serve(&ServeConfig{
-			HandshakeConfig: testHandshake,
-			Plugins:         testPluginMap,
-		})
-		// Shouldn't reach here but make sure we exit anyways
-		os.Exit(0)
-	case "test-interface-logger-grpc":
-		Serve(&ServeConfig{
-			HandshakeConfig: testHandshake,
-			Plugins:         testPluginMap,
-			GRPCServer:      DefaultGRPCServer,
-		})
-		// Shouldn't reach here but make sure we exit anyways
-		os.Exit(0)
-	case "test-interface-daemon":
-		// Serve!
-		Serve(&ServeConfig{
-			HandshakeConfig: testHandshake,
-			Plugins:         testPluginMap,
-		})
-
-		// Shouldn't reach here but make sure we exit anyways
-		os.Exit(0)
-	case "test-interface-tls":
-		// Serve!
-		Serve(&ServeConfig{
-			HandshakeConfig: testHandshake,
-			Plugins:         testPluginMap,
-			TLSProvider:     helperTLSProvider,
-		})
-
-		// Shouldn't reach here but make sure we exit anyways
-		os.Exit(0)
-
-	case "test-interface-mtls":
-		// Serve!
-		Serve(&ServeConfig{
-			HandshakeConfig: testVersionedHandshake,
-			Plugins:         testPluginMap,
-		})
-
-		// Shouldn't reach here but make sure we exit anyways
-		os.Exit(0)
 
 	case "test-versioned-plugins":
 		// Serve!
 		Serve(&ServeConfig{
 			HandshakeConfig: testVersionedHandshake,
 			VersionedPlugins: map[int]PluginSet{
-				2: testGRPCPluginMap,
-			},
-			GRPCServer:  DefaultGRPCServer,
-			TLSProvider: helperTLSProvider,
-		})
-
-		// Shouldn't reach here but make sure we exit anyways
-		os.Exit(0)
-	case "test-proto-upgraded-plugin":
-		// Serve 2 plugins over different protocols
-		Serve(&ServeConfig{
-			HandshakeConfig: testVersionedHandshake,
-			VersionedPlugins: map[int]PluginSet{
-				1: PluginSet{
-					"old": &testInterfacePlugin{Impl: testPlugin},
-				},
 				2: testGRPCPluginMap,
 			},
 			GRPCServer:  DefaultGRPCServer,

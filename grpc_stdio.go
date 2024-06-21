@@ -7,10 +7,10 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
 
 	"github.com/GoCodeAlone/go-plugin/internal/plugin"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	hclog "github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -49,7 +49,7 @@ func newGRPCStdioServer(log hclog.Logger, srcOut, srcErr io.Reader) *grpcStdioSe
 
 // StreamStdio streams our stdout/err as the response.
 func (s *grpcStdioServer) StreamStdio(
-	_ *empty.Empty,
+	_ *emptypb.Empty,
 	srv plugin.GRPCStdio_StreamStdioServer,
 ) error {
 	// Share the same data value between runs. Sending this over the wire
@@ -101,7 +101,7 @@ func newGRPCStdioClient(
 	client := plugin.NewGRPCStdioClient(conn)
 
 	// Connect immediately to the endpoint
-	stdioClient, err := client.StreamStdio(ctx, &empty.Empty{})
+	stdioClient, err := client.StreamStdio(ctx, &emptypb.Empty{})
 
 	// If we get an Unavailable or Unimplemented error, this means that the plugin isn't
 	// updated and linking to the latest version of go-plugin that supports

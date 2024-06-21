@@ -100,7 +100,7 @@ func (s *GRPCServer) Init() error {
 
 	// Register all our plugins onto the gRPC server.
 	for k, raw := range s.Plugins {
-		p, ok := raw.(GRPCPlugin)
+		p, ok := raw.(Plugin)
 		if !ok {
 			return fmt.Errorf("%q is not a GRPC-compatible plugin", k)
 		}

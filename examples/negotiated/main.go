@@ -23,13 +23,9 @@ func main() {
 	// Both version can be supported, but switch the implementation to
 	// demonstrate version negoation.
 	switch os.Getenv("KV_PROTO") {
-	case "netrpc":
-		plugins[2] = plugin.PluginSet{
-			"kv": &shared.KVPlugin{},
-		}
 	case "grpc":
 		plugins[3] = plugin.PluginSet{
-			"kv": &shared.KVGRPCPlugin{},
+			"kv": &shared.KVPlugin{},
 		}
 	default:
 		fmt.Println("must set KV_PROTO to netrpc or grpc")
@@ -42,7 +38,7 @@ func main() {
 		VersionedPlugins: plugins,
 		Cmd:              exec.Command("./kv-plugin"),
 		AllowedProtocols: []plugin.Protocol{
-			plugin.ProtocolNetRPC, plugin.ProtocolGRPC},
+			plugin.ProtocolGRPC},
 	})
 	defer client.Kill()
 

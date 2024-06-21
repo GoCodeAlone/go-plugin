@@ -6,27 +6,12 @@ package plugin
 import (
 	"bytes"
 	"context"
-	"io"
-	"net"
-	"net/rpc"
-
 	"github.com/GoCodeAlone/go-plugin/internal/grpcmux"
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/go-testing-interface"
 	"google.golang.org/grpc"
+	"net"
 )
-
-// TestOptions allows specifying options that can affect the behavior of the
-// test functions
-type TestOptions struct {
-	//ServerStdout causes the given value to be used in place of a blank buffer
-	//for RPCServer's Stdout
-	ServerStdout io.ReadCloser
-
-	//ServerStderr causes the given value to be used in place of a blank buffer
-	//for RPCServer's Stderr
-	ServerStderr io.ReadCloser
-}
 
 // The testing file contains test helpers that you can use outside of
 // this package for making it easier to test plugins themselves.
@@ -64,44 +49,6 @@ func TestConn(t testing.T) (net.Conn, net.Conn) {
 	<-doneCh
 
 	return clientConn, serverConn
-}
-
-// TestRPCConn returns a rpc client and server connected to each other.
-func TestRPCConn(t testing.T) (*rpc.Client, *rpc.Server) {
-	clientConn, serverConn := TestConn(t)
-
-	server := rpc.NewServer()
-	go server.ServeConn(serverConn)
-
-	client := rpc.NewClient(clientConn)
-	return client, server
-}
-
-// TestPluginRPCConn returns a plugin RPC client and server that are connected
-// together and configured.
-func TestPluginRPCConn(t testing.T, ps map[string]Plugin, opts *TestOptions) (*RPCClient, *RPCServer) {
-	// Create two net.Conns we can use to shuttle our control connection
-	clientConn, serverConn := TestConn(t)
-
-	// Start up the server
-	server := &RPCServer{Plugins: ps, Stdout: new(bytes.Buffer), Stderr: new(bytes.Buffer)}
-	if opts != nil {
-		if opts.ServerStdout != nil {
-			server.Stdout = opts.ServerStdout
-		}
-		if opts.ServerStderr != nil {
-			server.Stderr = opts.ServerStderr
-		}
-	}
-	go server.ServeConn(serverConn)
-
-	// Connect the client to the server
-	client, err := NewRPCClient(clientConn, ps)
-	if err != nil {
-		t.Fatalf("err: %s", err)
-	}
-
-	return client, server
 }
 
 // TestGRPCConn returns a gRPC client conn and grpc server that are connected

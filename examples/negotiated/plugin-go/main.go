@@ -49,13 +49,9 @@ func main() {
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: shared.Handshake,
 		VersionedPlugins: map[int]plugin.PluginSet{
-			// Version 2 only uses NetRPC
-			2: {
-				"kv": &shared.KVPlugin{Impl: &KV{}},
-			},
 			// Version 3 only uses GRPC
 			3: {
-				"kv": &shared.KVGRPCPlugin{Impl: &KVGRPC{}},
+				"kv": &shared.KVPlugin{Impl: &KVGRPC{}},
 			},
 		},
 

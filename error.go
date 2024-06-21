@@ -3,7 +3,7 @@
 
 package plugin
 
-// This is a type that wraps error types so that they can be messaged
+// BasicError This is a type that wraps error types so that they can be messaged
 // across RPC channels. Since "error" is an interface, we can't always
 // gob-encode the underlying structure. This is a valid error interface
 // implementer that we will push across.

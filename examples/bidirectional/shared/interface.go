@@ -36,10 +36,9 @@ type Counter interface {
 }
 
 // This is the implementation of plugin.Plugin so we can serve/consume this.
-// We also implement GRPCPlugin so that this plugin can be served over
+// We also implement Plugin so that this plugin can be served over
 // gRPC.
 type CounterPlugin struct {
-	plugin.NetRPCUnsupportedPlugin
 	// Concrete implementation, written in Go. This is only used for plugins
 	// that are written in Go.
 	Impl Counter
@@ -60,4 +59,4 @@ func (p *CounterPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroke
 	}, nil
 }
 
-var _ plugin.GRPCPlugin = &CounterPlugin{}
+var _ plugin.Plugin = &CounterPlugin{}
