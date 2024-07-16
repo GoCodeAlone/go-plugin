@@ -408,25 +408,15 @@ func Serve(opts *ServeConfig) {
 	// attach via a reattach config.
 	if opts.Test == nil {
 		const grpcBrokerMultiplexingSupported = true
-		protocolLine := fmt.Sprintf("%d|%d|%s|%s|%s|%s",
+		protocolLine := fmt.Sprintf("%d|%d|%s|%s|%s|%s|%v",
 			CoreProtocolVersion,
 			protoVersion,
 			listener.Addr().Network(),
 			listener.Addr().String(),
 			protoType,
-			serverCert)
+			serverCert,
+			grpcBrokerMultiplexingSupported)
 
-		// Old clients will error with new plugins if we blindly append the
-		// seventh segment for gRPC broker multiplexing support, because old
-		// client code uses strings.SplitN(line, "|", 6), which means a seventh
-		// segment will get appended to the sixth segment as "sixthpart|true".
-		//
-		// If the environment variable is set, we assume the client is new enough
-		// to handle a seventh segment, as it should now use
-		// strings.Split(line, "|") and always handle each segment individually.
-		if os.Getenv(envMultiplexGRPC) != "" {
-			protocolLine += fmt.Sprintf("|%v", grpcBrokerMultiplexingSupported)
-		}
 		fmt.Printf("%s\n", protocolLine)
 		os.Stdout.Sync()
 	} else if ch := opts.Test.ReattachConfigCh; ch != nil {
