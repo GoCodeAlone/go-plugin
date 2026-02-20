@@ -718,7 +718,7 @@ func TestClient_logStderrParseJSON(t *testing.T) {
 	}
 
 	for i, tt := range wants {
-		l := make(map[string]interface{})
+		l := make(map[string]any)
 		if err := json.Unmarshal([]byte(logs[i]), &l); err != nil {
 			t.Fatal(err)
 		}
@@ -738,7 +738,7 @@ type trackingLogger struct {
 	errorLogs []string
 }
 
-func (l *trackingLogger) Error(msg string, args ...interface{}) {
+func (l *trackingLogger) Error(msg string, args ...any) {
 	l.errorLogs = append(l.errorLogs, fmt.Sprintf("%s: %v", msg, args))
 	l.Logger.Error(msg, args...)
 }

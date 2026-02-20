@@ -16,7 +16,7 @@ import (
 type KV struct{}
 
 func (KV) Put(key string, value []byte) error {
-	value = []byte(fmt.Sprintf("%s\n\nWritten from plugin-go-grpc", string(value)))
+	value = fmt.Appendf(nil, "%s\n\nWritten from plugin-go-grpc", string(value))
 	return os.WriteFile("kv_"+key, value, 0644)
 }
 

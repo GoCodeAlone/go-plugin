@@ -115,7 +115,7 @@ func (c *GRPCClient) Close() error {
 }
 
 // ClientProtocol impl.
-func (c *GRPCClient) Dispense(name string) (interface{}, error) {
+func (c *GRPCClient) Dispense(name string) (any, error) {
 	p, ok := c.Plugins[name]
 	if !ok {
 		return nil, fmt.Errorf("unknown plugin type: %s", name)

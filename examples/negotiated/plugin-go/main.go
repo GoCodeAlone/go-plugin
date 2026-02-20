@@ -16,7 +16,7 @@ import (
 type KVGRPC struct{}
 
 func (KVGRPC) Put(key string, value []byte) error {
-	value = []byte(fmt.Sprintf("%s\n\nWritten from plugin version 3\n", string(value)))
+	value = fmt.Appendf(nil, "%s\n\nWritten from plugin version 3\n", string(value))
 	return os.WriteFile("kv_"+key, value, 0644)
 }
 
@@ -33,7 +33,7 @@ func (KVGRPC) Get(key string) ([]byte, error) {
 type KV struct{}
 
 func (KV) Put(key string, value []byte) error {
-	value = []byte(fmt.Sprintf("%s\n\nWritten from plugin version 2\n", string(value)))
+	value = fmt.Appendf(nil, "%s\n\nWritten from plugin version 2\n", string(value))
 	return os.WriteFile("kv_"+key, value, 0644)
 }
 

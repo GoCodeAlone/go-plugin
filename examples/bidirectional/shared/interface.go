@@ -52,7 +52,7 @@ func (p *CounterPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) er
 	return nil
 }
 
-func (p *CounterPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+func (p *CounterPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (any, error) {
 	return &GRPCClient{
 		client: proto.NewCounterClient(c),
 		broker: broker,

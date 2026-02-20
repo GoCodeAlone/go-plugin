@@ -27,5 +27,5 @@ type Plugin interface {
 	// GRPCClient should return the interface implementation for the plugin
 	// you're serving via gRPC. The provided context will be canceled by
 	// go-plugin in the event of the plugin process exiting.
-	GRPCClient(context.Context, *GRPCBroker, *grpc.ClientConn) (interface{}, error)
+	GRPCClient(context.Context, *GRPCBroker, *grpc.ClientConn) (any, error)
 }

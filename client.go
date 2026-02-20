@@ -18,6 +18,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -895,13 +896,7 @@ func (c *Client) Start() (addr net.Addr, err error) {
 			c.protocol = Protocol(parts[4])
 		}
 
-		found := false
-		for _, p := range c.config.AllowedProtocols {
-			if p == c.protocol {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(c.config.AllowedProtocols, c.protocol)
 		if !found {
 			err = fmt.Errorf("Unsupported plugin protocol %q. Supported: %v",
 				c.protocol, c.config.AllowedProtocols)

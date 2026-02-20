@@ -36,7 +36,7 @@ var testVersionedHandshake = HandshakeConfig{
 // testInterface is the test interface we use for plugins.
 type testInterface interface {
 	Double(int) int
-	PrintKV(string, interface{})
+	PrintKV(string, any)
 	Bidirectional() error
 	PrintStdio(stdout, stderr []byte)
 }
@@ -59,7 +59,7 @@ func (p *testGRPCInterfacePlugin) GRPCServer(b *GRPCBroker, s *grpc.Server) erro
 	return nil
 }
 
-func (p *testGRPCInterfacePlugin) GRPCClient(doneCtx context.Context, b *GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+func (p *testGRPCInterfacePlugin) GRPCClient(doneCtx context.Context, b *GRPCBroker, c *grpc.ClientConn) (any, error) {
 	return &testGRPCClient{broker: b, Client: grpctest.NewTestClient(c)}, nil
 }
 
@@ -86,7 +86,7 @@ type testInterfaceImpl struct {
 
 func (i *testInterfaceImpl) Double(v int) int { return v * 2 }
 
-func (i *testInterfaceImpl) PrintKV(key string, value interface{}) {
+func (i *testInterfaceImpl) PrintKV(key string, value any) {
 	i.logger.Info("PrintKV called", key, value)
 }
 
@@ -129,7 +129,7 @@ func (s *testGRPCServer) Double(
 func (s *testGRPCServer) PrintKV(
 	ctx context.Context,
 	req *grpctest.PrintKVRequest) (*grpctest.PrintKVResponse, error) {
-	var v interface{}
+	var v any
 	switch rv := req.Value.(type) {
 	case *grpctest.PrintKVRequest_ValueString:
 		v = rv.ValueString
@@ -224,7 +224,7 @@ func (c *testGRPCClient) Double(v int) int {
 	return int(resp.Output)
 }
 
-func (c *testGRPCClient) PrintKV(key string, value interface{}) {
+func (c *testGRPCClient) PrintKV(key string, value any) {
 	req := &grpctest.PrintKVRequest{Key: key}
 	switch v := value.(type) {
 	case string:

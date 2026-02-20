@@ -40,7 +40,7 @@ type ClientProtocol interface {
 	io.Closer
 
 	// Dispense dispenses a new instance of the plugin with the given name.
-	Dispense(string) (interface{}, error)
+	Dispense(string) (any, error)
 
 	// Ping checks that the client connection is still healthy.
 	Ping() error

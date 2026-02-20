@@ -18,14 +18,14 @@ type logEntry struct {
 
 // logEntryKV is a key value pair within the Output payload
 type logEntryKV struct {
-	Key   string      `json:"key"`
-	Value interface{} `json:"value"`
+	Key   string `json:"key"`
+	Value any    `json:"value"`
 }
 
 // flattenKVPairs is used to flatten KVPair slice into []interface{}
 // for hclog consumption.
-func flattenKVPairs(kvs []*logEntryKV) []interface{} {
-	var result []interface{}
+func flattenKVPairs(kvs []*logEntryKV) []any {
+	var result []any
 	for _, kv := range kvs {
 		result = append(result, kv.Key)
 		result = append(result, kv.Value)
@@ -36,7 +36,7 @@ func flattenKVPairs(kvs []*logEntryKV) []interface{} {
 
 // parseJSON handles parsing JSON output
 func parseJSON(input []byte) (*logEntry, error) {
-	var raw map[string]interface{}
+	var raw map[string]any
 	entry := &logEntry{}
 
 	err := json.Unmarshal(input, &raw)
