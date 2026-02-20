@@ -11,7 +11,6 @@ import (
 	grpctest "github.com/GoCodeAlone/go-plugin/test/grpc"
 	"github.com/jhump/protoreflect/grpcreflect"
 	"google.golang.org/grpc"
-	reflectpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 )
 
 func TestGRPC_App(t *testing.T) {
@@ -155,7 +154,7 @@ func testGRPCClientReflection(t *testing.T, multiplex bool) {
 	defer client.Close()
 	defer server.Stop()
 
-	refClient := grpcreflect.NewClient(ctx, reflectpb.NewServerReflectionClient(client.Conn))
+	refClient := grpcreflect.NewClientAuto(ctx, client.Conn)
 
 	svcs, err := refClient.ListServices()
 	if err != nil {
@@ -180,7 +179,7 @@ func testGRPCClientReflection(t *testing.T, multiplex bool) {
 		methodNames = append(methodNames, m.GetName())
 	}
 
-	expectedMethodNames := []string{"Check", "Watch"}
+	expectedMethodNames := []string{"Check", "List", "Watch"}
 
 	if !reflect.DeepEqual(methodNames, expectedMethodNames) {
 		t.Fatalf("expected: %v\ngot: %v", expectedMethodNames, methodNames)

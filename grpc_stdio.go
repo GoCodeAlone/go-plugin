@@ -17,13 +17,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// grpcStdioBuffer is the buffer size we try to fill when sending a chunk of
-// stdio data. This is currently 1 KB for no reason other than that seems like
-// enough (stdio data isn't that common) and is fairly low.
-const grpcStdioBuffer = 1 * 1024
-
 // grpcStdioServer implements the Stdio service and streams stdiout/stderr.
 type grpcStdioServer struct {
+	plugin.UnimplementedGRPCStdioServer
 	stdoutCh <-chan []byte
 	stderrCh <-chan []byte
 }

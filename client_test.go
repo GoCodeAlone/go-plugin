@@ -221,85 +221,6 @@ func TestClient_grpc(t *testing.T) {
 	}
 }
 
-func testClient_grpcSyncStdio(t *testing.T, useRunnerFunc bool) {
-	var syncOut, syncErr safeBuffer
-
-	process := helperProcess("test-grpc")
-	cfg := &ClientConfig{
-		HandshakeConfig:  testHandshake,
-		Plugins:          testGRPCPluginMap,
-		AllowedProtocols: []Protocol{ProtocolGRPC},
-		SyncStdout:       &syncOut,
-		SyncStderr:       &syncErr,
-	}
-
-	if useRunnerFunc {
-		cfg.RunnerFunc = func(l hclog.Logger, cmd *exec.Cmd, _ string) (runner.Runner, error) {
-			process.Env = append(process.Env, cmd.Env...)
-			return cmdrunner.NewCmdRunner(l, process)
-		}
-	} else {
-		cfg.Cmd = process
-	}
-	c := NewClient(cfg)
-	defer c.Kill()
-
-	if _, err := c.Start(); err != nil {
-		t.Fatalf("err: %s", err)
-	}
-
-	if v := c.Protocol(); v != ProtocolGRPC {
-		t.Fatalf("bad: %s", v)
-	}
-
-	// Grab the RPC client
-	client, err := c.Client()
-	if err != nil {
-		t.Fatalf("err should be nil, got %s", err)
-	}
-
-	// Grab the impl
-	raw, err := client.Dispense("test")
-	if err != nil {
-		t.Fatalf("err should be nil, got %s", err)
-	}
-
-	impl, ok := raw.(testInterface)
-	if !ok {
-		t.Fatalf("bad: %#v", raw)
-	}
-
-	// Check reattach config is sensible.
-	reattach := c.ReattachConfig()
-	if useRunnerFunc {
-		if reattach.Pid != 0 {
-			t.Fatal(reattach.Pid)
-		}
-	} else {
-		if reattach.Pid == 0 {
-			t.Fatal(reattach.Pid)
-		}
-	}
-
-	// Print the data
-	stdout := []byte("hello\nworld!")
-	stderr := []byte("and some error\n messages!")
-	impl.PrintStdio(stdout, stderr)
-
-	// Wait for it to be copied
-	for syncOut.String() == "" || syncErr.String() == "" {
-		time.Sleep(10 * time.Millisecond)
-	}
-
-	// We should get the data
-	if syncOut.String() != string(stdout) {
-		t.Fatalf("stdout didn't match: %s", syncOut.String())
-	}
-	if syncErr.String() != string(stderr) {
-		t.Fatalf("stderr didn't match: %s", syncErr.String())
-	}
-}
-
 func TestClient_cmdAndReattach(t *testing.T) {
 	config := &ClientConfig{
 		Cmd:      helperProcess("start-timeout"),
@@ -695,13 +616,10 @@ func testClient_logger(t *testing.T, proto string) {
 		impl.PrintKV("foo", "bar")
 		time.Sleep(100 * time.Millisecond)
 		mutex.Lock()
-		line, err := buffer.ReadString('\n')
+		output := buffer.String()
 		mutex.Unlock()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !strings.Contains(line, "foo=bar") {
-			t.Fatalf("bad: %q", line)
+		if !strings.Contains(output, "foo=bar") {
+			t.Fatalf("bad: %q", output)
 		}
 	}
 
@@ -713,13 +631,10 @@ func testClient_logger(t *testing.T, proto string) {
 		impl.PrintKV("foo", 12)
 		time.Sleep(100 * time.Millisecond)
 		mutex.Lock()
-		line, err := buffer.ReadString('\n')
+		output := buffer.String()
 		mutex.Unlock()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !strings.Contains(line, "foo=12") {
-			t.Fatalf("bad: %q", line)
+		if !strings.Contains(output, "foo=12") {
+			t.Fatalf("bad: %q", output)
 		}
 	}
 
@@ -836,36 +751,4 @@ func assertLines(t *testing.T, lines []string, expected int) {
 			t.Error(log)
 		}
 	}
-}
-
-type safeBuffer struct {
-	sync.Mutex
-	b *bytes.Buffer
-}
-
-func (s *safeBuffer) Write(p []byte) (n int, err error) {
-	s.Lock()
-	defer s.Unlock()
-	if s.b == nil {
-		s.b = new(bytes.Buffer)
-	}
-	return s.b.Write(p)
-}
-
-func (s *safeBuffer) Read(p []byte) (n int, err error) {
-	s.Lock()
-	defer s.Unlock()
-	if s.b == nil {
-		s.b = new(bytes.Buffer)
-	}
-	return s.b.Read(p)
-}
-
-func (s *safeBuffer) String() string {
-	s.Lock()
-	defer s.Unlock()
-	if s.b == nil {
-		s.b = new(bytes.Buffer)
-	}
-	return s.b.String()
 }

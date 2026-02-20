@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -114,6 +113,7 @@ var testGRPCPluginMap = map[string]Plugin{
 
 // testGRPCServer is the implementation of our GRPC service.
 type testGRPCServer struct {
+	grpctest.UnimplementedTestServer
 	Impl   testInterface
 	broker *GRPCBroker
 }
@@ -180,7 +180,9 @@ func (s *testGRPCServer) PrintStdio(
 	return &emptypb.Empty{}, nil
 }
 
-type pingPongServer struct{}
+type pingPongServer struct {
+	grpctest.UnimplementedPingPongServer
+}
 
 func (p *pingPongServer) Ping(ctx context.Context, req *grpctest.PingRequest) (*grpctest.PongResponse, error) {
 	return &grpctest.PongResponse{
@@ -202,8 +204,6 @@ func (s testGRPCServer) Stream(stream grpctest.Test_StreamServer) error {
 			return err
 		}
 	}
-
-	return nil
 }
 
 // testGRPCClient is an implementation of TestInterface that communicates
@@ -376,7 +376,7 @@ func TestHelperProcess(*testing.T) {
 		// If we have an arg, we write there on start
 		if len(args) > 0 {
 			path := args[0]
-			err := ioutil.WriteFile(path, []byte("foo"), 0644)
+			err := os.WriteFile(path, []byte("foo"), 0644)
 			if err != nil {
 				panic(err)
 			}
@@ -419,7 +419,7 @@ func TestHelperProcess(*testing.T) {
 		}
 
 		os.Exit(1)
-	case "test-grpc":
+	case "test-grpc", "test-interface-logger-grpc":
 		Serve(&ServeConfig{
 			HandshakeConfig: testHandshake,
 			Plugins:         testGRPCPluginMap,
@@ -536,7 +536,8 @@ func helperTLSProvider() (*tls.Config, error) {
 		ClientAuth:   tls.VerifyClientCertIfGiven,
 		ServerName:   "127.0.0.1",
 	}
-	tlsConfig.BuildNameToCertificate()
+	// tlsConfig.BuildNameToCertificate() is deprecated since Go 1.14;
+	// the certificate lookup is now automatic.
 
 	return tlsConfig, nil
 }

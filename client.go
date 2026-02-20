@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"hash"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -202,7 +201,7 @@ type ClientConfig struct {
 	// SyncStdout, SyncStderr can be set to override the
 	// respective os.Std* values in the plugin. Care should be taken to
 	// avoid races here. If these are nil, then this will be set to
-	// ioutil.Discard.
+	// io.Discard.
 	SyncStdout io.Writer
 	SyncStderr io.Writer
 
@@ -398,7 +397,7 @@ func NewClient(config *ClientConfig) (c *Client) {
 	}
 
 	if config.Stderr == nil {
-		config.Stderr = ioutil.Discard
+		config.Stderr = io.Discard
 	}
 
 	if config.SyncStdout == nil {
@@ -884,7 +883,10 @@ func (c *Client) Start() (addr net.Addr, err error) {
 		case "unix":
 			addr, err = net.ResolveUnixAddr("unix", address)
 		default:
-			err = fmt.Errorf("Unknown address type: %s", address)
+			err = fmt.Errorf("unknown address type: %s", address)
+		}
+		if err != nil {
+			return addr, err
 		}
 
 		// If we have a server type, then record that.

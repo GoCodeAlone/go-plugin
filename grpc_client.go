@@ -14,26 +14,32 @@ import (
 	"github.com/GoCodeAlone/go-plugin/internal/plugin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
-func dialGRPCConn(tls *tls.Config, dialer func(string, time.Duration) (net.Conn, error), dialOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
+func dialGRPCConn(tlsConfig *tls.Config, dialer func(string, time.Duration) (net.Conn, error), dialOpts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	// Build dialing options.
 	opts := make([]grpc.DialOption, 0)
 
-	// We use a custom dialer so that we can connect over unix domain sockets.
-	opts = append(opts, grpc.WithDialer(dialer))
-
-	// Fail right away
-	opts = append(opts, grpc.FailOnNonTempDialError(true))
+	// We use a custom context dialer so that we can connect over unix domain sockets.
+	opts = append(opts, grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
+		// Extract a timeout from the context deadline if available,
+		// otherwise use a default timeout.
+		timeout := 30 * time.Second
+		if deadline, ok := ctx.Deadline(); ok {
+			timeout = time.Until(deadline)
+		}
+		return dialer(addr, timeout)
+	}))
 
 	// If we have no TLS configuration set, we need to explicitly tell grpc
 	// that we're connecting with an insecure connection.
-	if tls == nil {
-		opts = append(opts, grpc.WithInsecure())
+	if tlsConfig == nil {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		opts = append(opts, grpc.WithTransportCredentials(
-			credentials.NewTLS(tls)))
+			credentials.NewTLS(tlsConfig)))
 	}
 
 	opts = append(opts,
@@ -45,7 +51,7 @@ func dialGRPCConn(tls *tls.Config, dialer func(string, time.Duration) (net.Conn,
 
 	// Connect. Note the first parameter is unused because we use a custom
 	// dialer that has the state to see the address.
-	conn, err := grpc.Dial("unused", opts...)
+	conn, err := grpc.NewClient("passthrough:///unused", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,14 +116,9 @@ func (c *GRPCClient) Close() error {
 
 // ClientProtocol impl.
 func (c *GRPCClient) Dispense(name string) (interface{}, error) {
-	raw, ok := c.Plugins[name]
+	p, ok := c.Plugins[name]
 	if !ok {
 		return nil, fmt.Errorf("unknown plugin type: %s", name)
-	}
-
-	p, ok := raw.(Plugin)
-	if !ok {
-		return nil, fmt.Errorf("plugin %q doesn't support gRPC", name)
 	}
 
 	return p.GRPCClient(c.doneCtx, c.broker, c.Conn)

@@ -100,8 +100,6 @@ func (s *gRPCBrokerServer) StartStream(stream plugin.GRPCBroker_StartStreamServe
 		case s.recv <- i:
 		}
 	}
-
-	return nil
 }
 
 // Send is used by the GRPCBroker to pass connection information into the stream
@@ -210,8 +208,6 @@ func (s *gRPCBrokerClientImpl) StartStream() error {
 		case s.recv <- i:
 		}
 	}
-
-	return nil
 }
 
 // Send is used by the GRPCBroker to pass connection information into the stream

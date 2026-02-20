@@ -6,11 +6,13 @@ package plugin
 import (
 	"bytes"
 	"context"
+	"net"
+
 	"github.com/GoCodeAlone/go-plugin/internal/grpcmux"
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/go-testing-interface"
 	"google.golang.org/grpc"
-	"net"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // The testing file contains test helpers that you can use outside of
@@ -65,17 +67,14 @@ func TestGRPCConn(t testing.T, register func(*grpc.Server)) (*grpc.ClientConn, *
 	register(server)
 	go server.Serve(l)
 
-	// Connect to the server
-	conn, err := grpc.Dial(
-		l.Addr().String(),
-		grpc.WithBlock(),
-		grpc.WithInsecure())
+	// Connect to the server using passthrough resolver to avoid DNS resolution
+	// on the raw address.
+	conn, err := grpc.NewClient(
+		"passthrough:///"+l.Addr().String(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
-
-	// Connection successful, close the listener
-	l.Close()
 
 	return conn, server
 }

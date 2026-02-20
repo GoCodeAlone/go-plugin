@@ -5,7 +5,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -65,7 +65,7 @@ func run() error {
 
 func main() {
 	// We don't want to see the plugin logs.
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 
 	if err := run(); err != nil {
 		fmt.Printf("error: %+v\n", err)

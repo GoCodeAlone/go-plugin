@@ -1,0 +1,22 @@
+version: "2"
+
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - unused
+    - ineffassign
+  disable:
+    - errcheck
+
+  settings:
+    staticcheck:
+      checks:
+        - all
+        - "-ST*"    # Disable all style checks - too noisy for existing codebase
+        - "-QF*"    # Disable all quickfix suggestions
+        - "-SA4032" # Unreachable runtime.GOOS check - intentional build-tag awareness
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
